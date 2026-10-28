@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="robots" content="noindex">
+<title>PBU Newsletter film player</title>
+<!--
+  Film player for the Pacific BU newsletter.
+  The newsletter is emailed as an .html file, and YouTube refuses to play inside a page opened as a file.
+  The newsletter shows this page in its pop-up instead (pbu-player.html?v=<YouTube video ID>);
+  because this page has a web address, YouTube's player works inside it.
+  Hosting needs: HTTPS, no sign-in, and the page must be allowed inside a frame
+  (no X-Frame-Options header and no Content-Security-Policy frame-ancestors restriction),
+  and no "Referrer-Policy: no-referrer" header.
+-->
+<style>
+  html,body{margin:0;height:100%;background:#000}
+  iframe{position:fixed;inset:0;width:100%;height:100%;border:0}
+  p{margin:0;padding:24px;color:#c9d3ea;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+</style>
+</head>
+<body>
+<script>
+(function () {
+  var id = new URLSearchParams(location.search).get('v') || '';
+  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) { document.body.innerHTML = '<p>Film not found.</p>'; return; }
+  var f = document.createElement('iframe');
+  f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0&playsinline=1';
+  f.title = 'Film';
+  f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+  f.allowFullscreen = true;
+  f.referrerPolicy = 'strict-origin-when-cross-origin';
+  document.body.appendChild(f);
+})();
+</script>
+</body>
+</html>
