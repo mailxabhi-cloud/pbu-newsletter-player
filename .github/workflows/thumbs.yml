@@ -19,7 +19,16 @@ jobs:
               if curl -fsSL -o "thumbs/$id.jpg" "https://i.ytimg.com/vi/$id/$q.jpg"; then echo "$id $q"; break; fi
             done
           done
-          ls -l thumbs
+          # alternative frames (YouTube's automatic stills at about 25%, 50% and 75% of the film)
+          mkdir -p thumbs/alt
+          for id in Xh3gmNR0YUk; do
+            for n in 1 2 3; do
+              for q in maxres sd hq; do
+                if curl -fsSL -o "thumbs/alt/${id}_${n}.jpg" "https://i.ytimg.com/vi/$id/${q}${n}.jpg"; then echo "$id frame $n: $q"; break; fi
+              done
+            done
+          done
+          ls -lR thumbs
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
