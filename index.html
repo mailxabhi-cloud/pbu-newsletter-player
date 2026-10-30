@@ -10,11 +10,12 @@
 <link rel="preconnect" href="https://www.google.com">
 <link rel="preconnect" href="https://i.ytimg.com">
 <link rel="preconnect" href="https://static.doubleclick.net">
+<link rel="preconnect" href="https://www.facebook.com">
 <title>PBU Newsletter film player</title>
 <!--
   Film player for the Pacific BU newsletter.
   The newsletter is emailed as an .html file, and YouTube refuses to play inside a page opened as a file.
-  The newsletter shows this page in its pop-up instead (pbu-player.html?v=<YouTube video ID>);
+  The newsletter shows this page instead (index.html?v=<YouTube id>, ?fb=<Facebook video id> or ?fbr=<Facebook reel id>);
   because this page has a web address, YouTube's player works inside it.
   Hosting needs: HTTPS, no sign-in, and the page must be allowed inside a frame
   (no X-Frame-Options header and no Content-Security-Policy frame-ancestors restriction),
@@ -29,14 +30,22 @@
 <body>
 <script>
 (function () {
-  var id = new URLSearchParams(location.search).get('v') || '';
-  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) { document.body.innerHTML = '<p>Film not found.</p>'; return; }
+  // ?v=<YouTube id>   ?fb=<Facebook video id>   ?fbr=<Facebook reel id>
+  var q = new URLSearchParams(location.search), yt = q.get('v') || '', fb = q.get('fb') || '', fbr = q.get('fbr') || '';
   var f = document.createElement('iframe');
-  f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0&playsinline=1';
-  f.title = 'Film';
-  f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+  f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write; web-share';
   f.allowFullscreen = true;
   f.referrerPolicy = 'strict-origin-when-cross-origin';
+  if (/^[A-Za-z0-9_-]{11}$/.test(yt)) {
+    f.src = 'https://www.youtube-nocookie.com/embed/' + yt + '?autoplay=1&rel=0&playsinline=1';
+  } else if (/^\d{6,25}$/.test(fb) || /^\d{6,25}$/.test(fbr)) {
+    var reel = !!fbr, id = fb || fbr, w = innerWidth, h = innerHeight;
+    if (reel) w = Math.min(w, Math.round(h * 9 / 16));               // upright reels keep their shape, centred
+    var href = reel ? 'https://www.facebook.com/reel/' + id : 'https://www.facebook.com/watch/?v=' + id;
+    f.src = 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(href) + '&show_text=false&autoplay=true&allowfullscreen=true&width=' + w + (reel ? '&height=' + h : '');
+    f.style.width = w + 'px'; f.style.left = Math.round((innerWidth - w) / 2) + 'px'; f.style.right = 'auto';
+  } else { document.body.innerHTML = '<p>Film not found.</p>'; return; }
+  f.title = 'Film';
   document.body.appendChild(f);
 })();
 </script>
