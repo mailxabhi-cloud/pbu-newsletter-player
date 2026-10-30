@@ -1,5 +1,5 @@
 name: Fetch Brand Highlights assets
-# Downloads official model photos, brand logos and a video thumbnail for the newsletter's Brand Highlights page.
+# Downloads official model photos and brand logos for the newsletter's Brand Highlights page.
 on:
   push:
     paths: ['.github/workflows/bh-assets.yml']
@@ -14,29 +14,22 @@ jobs:
       - name: Download
         run: |
           set +e
-          mkdir -p assets/poll assets/logos assets/video
+          mkdir -p assets/poll assets/logos
           get(){ curl -fsSL -o "$1" "$2" && echo "ok  $1 ($(stat -c%s "$1") bytes)" || echo "FAIL $1 <- $2"; }
-          # official model photos (brand site / Stellantis media)
-          get assets/poll/alfa_tonale_ss.jpg  "https://www.alfaromeo.com.au/content/dam/alfa/au/special-series/sport-speciale/tonale-sport-speciale-side-view/mobile.jpg"
-          get assets/poll/alfa_tonale_ss_jelly.png "https://www.alfaromeo.com.au/content/dam/alfa/au/nav/jellies/alfa-romeo-tonale-sport-special.png"
-          get assets/poll/leap_b05.png        "https://www.media.stellantis.com/cache/9/9/a/5/0/99a5059774ae418d94baee480041d8a988cff536.png"
-          get assets/poll/peugeot_408.jpeg    "https://www.media.stellantis.com/cache/8/b/5/b/4/8b5b41de3c0bf4c52f9ba3ed3ecbac945812215f.jpeg"
-          get assets/poll/peugeot_408_b.jpeg  "https://www.media.stellantis.com/cache/1/c/5/0/c/1c50c66b7defe87b3ea9f296fc80f0fa6fac2603.jpeg"
-          get assets/poll/citroen_c3ac.jpeg   "https://www.media.stellantis.com/cache/b/0/5/5/7/b05574d2fd29b0387bd2aada9f9e99ed64c97291.jpeg"
-          get assets/poll/jeep_gc.png         "https://www.media.stellantis.com/cache/2/3/f/9/f/23f9fcc1640896e7aa0e17b7c8fe29193c4783e5.png"
-          # brand logos (Wikipedia infobox images, via the Wikipedia API)
-          for t in Alfa_Romeo Citro%C3%ABn Fiat_Automobiles Peugeot Jeep Leapmotor; do
-            u=$(curl -fsSL "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=original&format=json&titles=$t" | jq -r '.query.pages[].original.source // empty')
-            n=$(echo "$t" | tr -d '%' | tr 'A-Z' 'a-z'); ext="${u##*.}"
-            [ -n "$u" ] && get "assets/logos/$n.$ext" "$u" || echo "no image for $t"
-          done
-          # YouTube thumbnail for the Rubicon film
-          get assets/video/yt_CRYqBT3httM.jpg "https://i.ytimg.com/vi/CRYqBT3httM/maxresdefault.jpg" || get assets/video/yt_CRYqBT3httM.jpg "https://i.ytimg.com/vi/CRYqBT3httM/hqdefault.jpg"
-          for n in 1 2 3; do get "assets/video/yt_CRYqBT3httM_$n.jpg" "https://i.ytimg.com/vi/CRYqBT3httM/maxres$n.jpg"; done
+          # Jeep Grand Cherokee: official Stellantis media photos
+          get assets/poll/jeep_gc_2021.jpeg "https://www.media.stellantis.com/cache/3/b/3/0/6/3b3063a5360d6d00399ee0690c320a0fadee08e2.jpeg"
+          get assets/poll/jeep_gc_ch.jpeg   "https://www.media.stellantis.com/cache/d/6/2/f/e/d62feca6e3b42dd0c81cf4db7882490110a78972.jpeg"
+          # brand logos from Wikimedia Commons (search the File namespace, keep the top results)
+          commons(){ # $1 = name prefix, $2 = search text
+            curl -fsSL "https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=6&prop=imageinfo&iiprop=url&format=json&gsrsearch=$2" \
+              | jq -r '.query.pages[] | "\(.index)\t\(.title)\t\(.imageinfo[0].url)"' | sort -n | head -6 | while IFS=$'\t' read -r i t u; do
+                ext="${u##*.}"; echo "$1 #$i $t"; get "assets/logos/${1}_$i.$ext" "$u"; done; }
+          commons alfa "Alfa%20Romeo%202015%20logo%20svg"
+          commons fiat "Fiat%20Automobiles%202020%20logo%20svg"
           ls -lR assets
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add assets
-          git diff --cached --quiet || (git commit -m "Add Brand Highlights assets" && git push)
+          git diff --cached --quiet || (git commit -m "Add Grand Cherokee photos and brand logos" && git push)
