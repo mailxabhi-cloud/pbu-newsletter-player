@@ -16,20 +16,17 @@ jobs:
           set +e
           mkdir -p assets/poll assets/logos
           get(){ curl -fsSL -o "$1" "$2" && echo "ok  $1 ($(stat -c%s "$1") bytes)" || echo "FAIL $1 <- $2"; }
-          # Jeep Grand Cherokee: official Stellantis media photos
-          get assets/poll/jeep_gc_2021.jpeg "https://www.media.stellantis.com/cache/3/b/3/0/6/3b3063a5360d6d00399ee0690c320a0fadee08e2.jpeg"
-          get assets/poll/jeep_gc_ch.jpeg   "https://www.media.stellantis.com/cache/d/6/2/f/e/d62feca6e3b42dd0c81cf4db7882490110a78972.jpeg"
           # brand logos from Wikimedia Commons (search the File namespace, keep the top results)
           commons(){ # $1 = name prefix, $2 = search text
-            curl -fsSL "https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=6&prop=imageinfo&iiprop=url&format=json&gsrsearch=$2" \
-              | jq -r '.query.pages[] | "\(.index)\t\(.title)\t\(.imageinfo[0].url)"' | sort -n | head -6 | while IFS=$'\t' read -r i t u; do
-                ext="${u##*.}"; echo "$1 #$i $t"; get "assets/logos/${1}_$i.$ext" "$u"; done; }
-          commons alfa "Alfa%20Romeo%202015%20logo%20svg"
-          commons fiat "Fiat%20Automobiles%202020%20logo%20svg"
+            curl -fsSL "https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url&format=json&gsrsearch=$2" \
+              | jq -r '.query.pages[] | "\(.index)\t\(.title)\t\(.imageinfo[0].url)"' | sort -n | head -8 | while IFS=$'\t' read -r i t u; do
+                ext="${u##*.}"; ext="${ext%%\?*}"; echo "$1 #$i $t"; get "assets/logos/${1}_$i.$ext" "$u"; done; }
+          commons alfalogo "Alfa%20Romeo%20logo"
+          commons fiatlogo "Fiat%20logo"
           ls -lR assets
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
           git add assets
-          git diff --cached --quiet || (git commit -m "Add Grand Cherokee photos and brand logos" && git push)
+          git diff --cached --quiet || (git commit -m "Add brand logo candidates" && git push)
