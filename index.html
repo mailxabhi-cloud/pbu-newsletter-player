@@ -31,13 +31,14 @@
 <script>
 (function () {
   // ?v=<YouTube id>   ?fb=<Facebook video id>   ?fbr=<Facebook reel id>
+  // Films start muted (YouTube: mute=1; Facebook plays muted when it starts on its own) until the viewer turns the sound on.
   var q = new URLSearchParams(location.search), yt = q.get('v') || '', fb = q.get('fb') || '', fbr = q.get('fbr') || '';
   var f = document.createElement('iframe');
   f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write; web-share';
   f.allowFullscreen = true;
   f.referrerPolicy = 'strict-origin-when-cross-origin';
   if (/^[A-Za-z0-9_-]{11}$/.test(yt)) {
-    f.src = 'https://www.youtube-nocookie.com/embed/' + yt + '?autoplay=1&rel=0&playsinline=1';
+    f.src = 'https://www.youtube-nocookie.com/embed/' + yt + '?autoplay=1&mute=1&rel=0&playsinline=1';   // starts muted; the viewer turns the sound on
   } else if (/^\d{6,25}$/.test(fb) || /^\d{6,25}$/.test(fbr)) {
     var reel = !!fbr, id = fb || fbr, w = innerWidth, h = innerHeight;
     if (reel) w = Math.min(w, Math.round(h * 9 / 16));               // upright reels keep their shape, centred
